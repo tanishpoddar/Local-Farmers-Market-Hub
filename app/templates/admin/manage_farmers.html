@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Manage Farmers | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Manage Farmers</h1>
+
+<div class="bg-white rounded shadow">
+    <div class="p-6 border-b">
+        <h2 class="text-lg font-semibold">All Farmers</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for farmer in farmers %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ farmer.username }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ farmer.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ farmer.location or 'N/A' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if farmer.is_approved %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Approved
+                            </span>
+                        {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ farmer.products|length }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ farmer.created_at.strftime('%Y-%m-%d') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {% if not farmer.is_approved %}
+                            <button class="approve-farmer-btn text-green-600 hover:text-green-900 mr-3" data-farmer-id="{{ farmer.id }}">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="reject-farmer-btn text-red-600 hover:text-red-900" data-farmer-id="{{ farmer.id }}">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        {% else %}
+                            <span class="text-gray-500">Approved</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">No farmers found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Get CSRF token from meta tag or generate it
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+}
+
+// Approve farmer
+Array.from(document.getElementsByClassName('approve-farmer-btn')).forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to approve this farmer?')) {
+            const farmerId = this.dataset.farmerId;
+            fetch(`/admin/farmers/${farmerId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    csrf_token: getCSRFToken()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while approving the farmer.');
+            });
+        }
+    });
+});
+
+// Reject farmer
+Array.from(document.getElementsByClassName('reject-farmer-btn')).forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to reject this farmer? This will delete their account and all products.')) {
+            const farmerId = this.dataset.farmerId;
+            fetch(`/admin/farmers/${farmerId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    csrf_token: getCSRFToken()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while rejecting the farmer.');
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

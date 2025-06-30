@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Profile | Farmer's Market Hub{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Profile</h1>
+            <a href="{{ url_for('auth.edit_profile') }}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                <i class="fas fa-edit mr-1"></i>Edit Profile
+            </a>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block font-medium text-gray-700">Username</label>
+                <p class="text-gray-900">{{ current_user.username }}</p>
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Email</label>
+                <p class="text-gray-900">{{ current_user.email }}</p>
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Role</label>
+                <p class="text-gray-900">{{ current_user.role.value|capitalize }}</p>
+            </div>
+            {% if current_user.location %}
+            <div>
+                <label class="block font-medium text-gray-700">Location</label>
+                <p class="text-gray-900">{{ current_user.location }}</p>
+            </div>
+            {% endif %}
+            {% if current_user.phone %}
+            <div>
+                <label class="block font-medium text-gray-700">Phone</label>
+                <p class="text-gray-900">{{ current_user.phone }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <label class="block font-medium text-gray-700">Account Status</label>
+                <p class="text-gray-900">
+                    {% if current_user.is_approved %}
+                        <span class="text-green-600">Approved</span>
+                    {% else %}
+                        <span class="text-yellow-600">Pending Approval</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <label class="block font-medium text-gray-700">Member Since</label>
+                <p class="text-gray-900">{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Cart | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Shopping Cart</h1>
+{% if cart_items %}
+<form id="cart-form">
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded shadow">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 text-left">Product</th>
+                    <th class="px-4 py-2 text-left">Price</th>
+                    <th class="px-4 py-2 text-left">Quantity</th>
+                    <th class="px-4 py-2 text-left">Total</th>
+                    <th class="px-4 py-2"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td class="px-4 py-2 flex items-center gap-2">
+                        <img src="{{ url_for('static', filename=item.product.image or 'img/placeholder.png') }}" alt="{{ item.product.name }}" class="w-12 h-12 object-cover rounded">
+                        <a href="{{ url_for('main.product_detail', product_id=item.product.id) }}" class="font-semibold">{{ item.product.name }}</a>
+                    </td>
+                    <td class="px-4 py-2">₹{{ '%.2f'|format(item.product.price) }}</td>
+                    <td class="px-4 py-2">
+                        <label for="cart-qty-{{ item.product.id }}" class="sr-only">Quantity for {{ item.product.name }}</label>
+                        <input id="cart-qty-{{ item.product.id }}" type="number" name="quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="1" max="{{ item.product.quantity }}" class="w-20 px-2 py-1 border rounded-md cart-qty-input" data-product-id="{{ item.product.id }}" placeholder="Qty" title="Quantity">
+                    </td>
+                    <td class="px-4 py-2">₹{{ '%.2f'|format(item.total) }}</td>
+                    <td class="px-4 py-2">
+                        <button type="button" class="text-red-600 hover:underline cart-remove-btn" data-product-id="{{ item.product.id }}"><i class="fas fa-trash"></i> Remove</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="flex justify-between items-center mt-6">
+        <div></div>
+        <div class="text-xl font-bold">Total: ₹{{ '%.2f'|format(total) }}</div>
+    </div>
+    <div class="flex justify-end mt-6">
+        <a href="{{ url_for('orders.checkout') }}" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">Proceed to Checkout</a>
+    </div>
+</form>
+{% else %}
+<p class="text-gray-500">Your cart is empty.</p>
+{% endif %}
+
+{% block extra_js %}
+<script>
+// Update quantity
+Array.from(document.getElementsByClassName('cart-qty-input')).forEach(function(input) {
+    input.addEventListener('change', function() {
+        const productId = this.dataset.productId;
+        const quantity = this.value;
+        fetch(`/cart/update/${productId}`, {
+            method: 'POST',
+            body: new URLSearchParams({quantity}),
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => response.json())
+        .then(data => { if (data.success) location.reload(); });
+    });
+});
+// Remove item
+Array.from(document.getElementsByClassName('cart-remove-btn')).forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const productId = this.dataset.productId;
+        fetch(`/cart/remove/${productId}`, {
+            method: 'POST',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => response.json())
+        .then(data => { if (data.success) location.reload(); });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Search Results | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Search Results for "{{ query }}"</h1>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for product in products %}
+        <div class="product-card bg-white rounded-lg shadow p-4 flex flex-col">
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
+                <img src="{{ url_for('static', filename=product.image or 'img/placeholder.png') }}" alt="{{ product.name }}" class="w-full h-40 object-cover rounded mb-2">
+                <h3 class="text-lg font-bold">{{ product.name }}</h3>
+            </a>
+            <p class="text-green-700 font-semibold mt-1 mb-2">₹{{ '%.2f'|format(product.price) }}</p>
+            <p class="text-gray-500 text-sm mb-2">By {{ product.farmer.username }} ({{ product.farmer.location }})</p>
+            <div class="flex-1"></div>
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-center">View Details</a>
+        </div>
+    {% else %}
+        <p class="col-span-4 text-gray-500">No products found for your search.</p>
+    {% endfor %}
+</div>
+{% endblock %} 

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.id }} | Farmer's Market Hub{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Order #{{ order.id }}</h1>
+            <span id="order-status" class="px-3 py-1 rounded-full text-sm font-medium
+                {% if order.status.value == 'pending' %}bg-yellow-100 text-yellow-800
+                {% elif order.status.value == 'confirmed' %}bg-blue-100 text-blue-800
+                {% elif order.status.value == 'shipped' %}bg-purple-100 text-purple-800
+                {% elif order.status.value == 'delivered' %}bg-green-100 text-green-800
+                {% elif order.status.value == 'cancelled' %}bg-red-100 text-red-800
+                {% endif %}">
+                {{ order.status.value.title() }}
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Order Details -->
+            <div>
+                <h2 class="text-lg font-semibold mb-4">Order Details</h2>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Order Date:</span>
+                        <span>{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Amount:</span>
+                        <span class="font-semibold">₹{{ "%.2f"|format(order.total) }}</span>
+                    </div>
+                    {% if order.notes %}
+                    <div>
+                        <span class="text-gray-600">Notes:</span>
+                        <p class="mt-1">{{ order.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div>
+                <h2 class="text-lg font-semibold mb-4">Customer Information</h2>
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div>
+                        <span class="text-gray-600">Name:</span>
+                        <p>{{ order.buyer.username }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Email:</span>
+                        <p>{{ order.buyer.email }}</p>
+                    </div>
+                    {% if order.shipping_address %}
+                    <div>
+                        <span class="text-gray-600">Shipping Address:</span>
+                        <p class="mt-1">{{ order.shipping_address }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="mt-6">
+            <h2 class="text-lg font-semibold mb-4">Order Items</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                {% for item in order.items %}
+                <div class="flex items-center justify-between py-3 border-b border-gray-200 last:border-b-0">
+                    <div class="flex items-center space-x-4">
+                        {% if item.product.image %}
+                        <img src="{{ url_for('static', filename='uploads/' + item.product.image) }}" alt="{{ item.product.name }}" class="w-16 h-16 object-cover rounded-md">
+                        {% else %}
+                        <div class="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center">
+                            <span class="text-gray-500 text-sm">No Image</span>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="font-medium">{{ item.product.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ item.quantity }} {{ item.product.unit }} @ ₹{{ "%.2f"|format(item.product.price) }}</p>
+                            <p class="text-sm text-gray-500">Farmer: {{ item.product.farmer.username }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium">₹{{ "%.2f"|format(item.quantity * item.product.price) }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Status Update (for farmers) -->
+        {% if current_user.is_authenticated and current_user.role.value == 'farmer' and order.farmer_id == current_user.id and order.status.value not in ['completed', 'cancelled'] %}
+        <div class="mt-6">
+            <h2 class="text-lg font-semibold mb-4">Update Order Status</h2>
+            <form id="status-form" action="{{ url_for('orders.update_order_status', order_id=order.id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="flex items-center space-x-4">
+                    <select name="status" aria-label="Order status" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="pending" {% if order.status.value == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="confirmed" {% if order.status.value == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="shipped" {% if order.status.value == 'shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="delivered" {% if order.status.value == 'delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="preparing" {% if order.status.value == 'preparing' %}selected{% endif %}>Preparing</option>
+                        <option value="ready" {% if order.status.value == 'ready' %}selected{% endif %}>Ready</option>
+                        <option value="completed" {% if order.status.value == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if order.status.value == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                        Update Status
+                    </button>
+                </div>
+            </form>
+            <div id="status-message" class="mt-2 text-sm"></div>
+        </div>
+        {% endif %}
+
+        <div class="mt-6 flex gap-4">
+            {% if current_user.is_authenticated and current_user.role == 'buyer' %}
+            <a href="{{ url_for('orders.my_orders') }}" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                Back to My Orders
+            </a>
+            {% elif current_user.is_authenticated and current_user.role == 'farmer' %}
+            <a href="{{ url_for('admin.manage_orders') }}" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                Back to Orders
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if current_user.is_farmer() and order.status.value not in ['completed', 'cancelled'] %}
+<script>
+const statusForm = document.getElementById('status-form');
+if (statusForm) {
+    statusForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrf_token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const msg = document.getElementById('status-message');
+            msg.textContent = data.message || 'Status updated!';
+            msg.className = 'mt-2 text-sm ' + (data.success ? 'text-green-700' : 'text-red-600');
+            if (data.success && data.status) {
+                document.getElementById('order-status').textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+            }
+        });
+    });
+}
+</script>
+{% endif %}
+{% endblock %} 

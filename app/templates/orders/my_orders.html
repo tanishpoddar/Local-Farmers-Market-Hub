@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}My Orders | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">My Orders</h1>
+{% if orders %}
+<div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded shadow">
+        <thead>
+            <tr>
+                <th class="px-4 py-2 text-left">Order #</th>
+                <th class="px-4 py-2 text-left">Farmer/Buyer</th>
+                <th class="px-4 py-2 text-left">Status</th>
+                <th class="px-4 py-2 text-left">Total</th>
+                <th class="px-4 py-2 text-left">Date</th>
+                <th class="px-4 py-2"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+            <tr>
+                <td class="px-4 py-2 font-semibold">#{{ order.id }}</td>
+                <td class="px-4 py-2">
+                    {% if current_user.is_farmer() %}
+                        {{ order.buyer.username }}
+                    {% else %}
+                        {{ order.farmer.username }}
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2">{{ order.status.value|capitalize }}</td>
+                <td class="px-4 py-2">₹{{ '%.2f'|format(order.total_price) }}</td>
+                <td class="px-4 py-2">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="px-4 py-2">
+                    <a href="{{ url_for('orders.order_detail', order_id=order.id) }}" class="text-green-700 hover:underline">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-gray-500">You have no orders yet.</p>
+{% endif %}
+{% endblock %} 

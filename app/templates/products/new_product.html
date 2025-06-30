@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Add New Product | Farmer's Market Hub{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6 text-center">Add New Product</h1>
+        
+        <form method="post" action="{{ url_for('products.new_product') }}" enctype="multipart/form-data" class="max-w-2xl">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                    <input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select id="category" name="category" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Select Category</option>
+                        <option value="vegetables">Vegetables</option>
+                        <option value="fruits">Fruits</option>
+                        <option value="herbs">Herbs</option>
+                        <option value="dairy">Dairy</option>
+                        <option value="eggs">Eggs</option>
+                        <option value="honey">Honey</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price per Unit *</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-500">₹</span>
+                        <input type="number" id="price" name="price" step="0.01" min="0" required class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    </div>
+                </div>
+                <div>
+                    <label for="unit" class="block text-sm font-medium text-gray-700 mb-1">Unit *</label>
+                    <select id="unit" name="unit" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <option value="">Select Unit</option>
+                        <option value="kg">Kilogram (kg)</option>
+                        <option value="half_kg">Half Kilogram (500g)</option>
+                        <option value="250g">250 Grams</option>
+                        <option value="piece">Piece</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="bunch">Bunch</option>
+                        <option value="jar">Jar</option>
+                        <option value="bottle">Bottle</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Describe your product..."></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                    <input type="file" id="image" name="image" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <p class="text-sm text-gray-500 mt-1">Upload a clear image of your product (JPG, PNG, GIF)</p>
+                </div>
+                <div>
+                    <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Available Stock *</label>
+                    <input type="number" id="stock" name="stock" min="0" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="organic" class="flex items-center">
+                        <input type="checkbox" id="organic" name="organic" class="rounded border-gray-300 text-green-600 focus:ring-green-500">
+                        <span class="ml-2 text-sm text-gray-700">Organic Product</span>
+                    </label>
+                </div>
+            </div>
+            <div class="mt-6 flex gap-4">
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    Add Product
+                </button>
+                <a href="{{ url_for('products.farmer_products') }}" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

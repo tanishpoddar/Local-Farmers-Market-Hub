@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Reports | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Reports & Analytics</h1>
+
+<!-- Sales Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Top Products</h2>
+        <div class="space-y-3">
+            {% for product in top_products %}
+            <div class="flex justify-between items-center py-2 border-b last:border-b-0">
+                <div>
+                    <p class="font-medium">{{ product.name }}</p>
+                    <p class="text-sm text-gray-600">{{ product.total_sold }} units sold</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">${{ '%.2f'|format(product.total_revenue) }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">No sales data available</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Top Farmers</h2>
+        <div class="space-y-3">
+            {% for farmer in top_farmers %}
+            <div class="flex justify-between items-center py-2 border-b last:border-b-0">
+                <div>
+                    <p class="font-medium">{{ farmer.username }}</p>
+                    <p class="text-sm text-gray-600">{{ farmer.order_count }} orders</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-medium">${{ '%.2f'|format(farmer.total_revenue) }}</p>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-gray-500">No sales data available</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Sales Chart -->
+<div class="bg-white rounded shadow p-6 mb-8">
+    <h2 class="text-lg font-semibold mb-4">Sales Trend (Last 30 Days)</h2>
+    {% if sales_data %}
+    <div class="overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Orders</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Sales</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for data in sales_data %}
+                <tr>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ data.date }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{{ data.order_count }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${{ '%.2f'|format(data.total_sales) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-500">No sales data available for the last 30 days</p>
+    {% endif %}
+</div>
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded shadow p-6 text-center">
+        <div class="text-3xl font-bold text-green-600 mb-2">
+            ${{ '%.2f'|format(sales_data|sum(attribute='total_sales') if sales_data else 0) }}
+        </div>
+        <p class="text-gray-600">Total Sales (30 days)</p>
+    </div>
+    <div class="bg-white rounded shadow p-6 text-center">
+        <div class="text-3xl font-bold text-blue-600 mb-2">
+            {{ sales_data|sum(attribute='order_count') if sales_data else 0 }}
+        </div>
+        <p class="text-gray-600">Total Orders (30 days)</p>
+    </div>
+    <div class="bg-white rounded shadow p-6 text-center">
+        <div class="text-3xl font-bold text-purple-600 mb-2">
+            {{ '%.2f'|format((sales_data|sum(attribute='total_sales') / sales_data|sum(attribute='order_count')) if sales_data and sales_data|sum(attribute='order_count') > 0 else 0) }}
+        </div>
+        <p class="text-gray-600">Average Order Value</p>
+    </div>
+</div>
+{% endblock %} 

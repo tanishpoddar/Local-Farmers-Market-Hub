@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Products | Farmer's Market Hub{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Browse Products</h1>
+<form method="get" class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end" aria-label="Product Filters">
+    <div>
+        <label for="search" class="block text-sm font-medium">Search</label>
+        <input id="search" type="text" name="search" value="{{ search }}" placeholder="Search..." class="w-full px-3 py-2 border rounded-md">
+    </div>
+    <div>
+        <label for="category" class="block text-sm font-medium">Category</label>
+        <select id="category" name="category" class="w-full px-3 py-2 border rounded-md" title="Category">
+            <option value="">All</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex gap-2">
+        <div>
+            <label for="min_price" class="block text-sm font-medium">Min Price</label>
+            <input id="min_price" type="number" step="0.01" name="min_price" value="{{ min_price or '' }}" placeholder="Min" class="w-full px-3 py-2 border rounded-md">
+        </div>
+        <div>
+            <label for="max_price" class="block text-sm font-medium">Max Price</label>
+            <input id="max_price" type="number" step="0.01" name="max_price" value="{{ max_price or '' }}" placeholder="Max" class="w-full px-3 py-2 border rounded-md">
+        </div>
+    </div>
+    <div class="md:col-span-3">
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"><i class="fas fa-search mr-1"></i>Filter</button>
+    </div>
+</form>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for product in products.items %}
+        <div class="product-card bg-white rounded-lg shadow p-4 flex flex-col">
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}">
+                <img src="{{ url_for('static', filename=product.image or 'img/placeholder.png') }}" alt="{{ product.name }}" class="w-full h-40 object-cover rounded mb-2">
+                <h3 class="text-lg font-bold">{{ product.name }}</h3>
+            </a>
+            <p class="text-green-700 font-semibold mt-1 mb-2">₹{{ '%.2f'|format(product.price) }}</p>
+            <p class="text-gray-500 text-sm mb-2">By {{ product.farmer.username }} ({{ product.farmer.location }})</p>
+            <div class="flex-1"></div>
+            <a href="{{ url_for('main.product_detail', product_id=product.id) }}" class="mt-2 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-center">View Details</a>
+        </div>
+    {% else %}
+        <p class="col-span-4 text-gray-500">No products found.</p>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if products.pages > 1 %}
+<div class="mt-8 flex justify-center space-x-2">
+    {% if products.has_prev %}
+        <a href="{{ url_for('main.products', page=products.prev_num, search=search, category=category, min_price=min_price, max_price=max_price) }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">&laquo; Prev</a>
+    {% endif %}
+    <span class="px-3 py-1 bg-green-100 rounded">Page {{ products.page }} of {{ products.pages }}</span>
+    {% if products.has_next %}
+        <a href="{{ url_for('main.products', page=products.next_num, search=search, category=category, min_price=min_price, max_price=max_price) }}" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">Next &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %} 

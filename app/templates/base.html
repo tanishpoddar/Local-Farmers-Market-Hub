@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}Local Farmer's Market Hub{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        .flash-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-green-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="flex items-center space-x-2">
+                        <i class="fas fa-leaf text-2xl"></i>
+                        <span class="text-xl font-bold">Farmer's Market Hub</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('main.products') }}" class="hover:text-green-200 transition-colors">
+                        <i class="fas fa-shopping-basket mr-1"></i>Products
+                    </a>
+                    
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin() %}
+                            <a href="{{ url_for('admin.dashboard') }}" class="hover:text-green-200 transition-colors">
+                                <i class="fas fa-cog mr-1"></i>Admin
+                            </a>
+                            <div class="relative" id="profile-dropdown">
+                                <button id="profile-dropdown-btn" type="button" class="flex items-center space-x-1 hover:text-green-200 transition-colors focus:outline-none">
+                                    <i class="fas fa-user mr-1"></i>
+                                    <span>{{ current_user.username }}</span>
+                                    <i class="fas fa-chevron-down text-sm"></i>
+                                </button>
+                                <div id="profile-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                                    <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('main.products') }}" class="hover:text-green-200 transition-colors">
+                                <i class="fas fa-shopping-basket mr-1"></i>Products
+                            </a>
+                            {% if not current_user.is_farmer() %}
+                            <a href="{{ url_for('orders.cart') }}" class="hover:text-green-200 transition-colors relative">
+                                <i class="fas fa-shopping-cart mr-1"></i>Cart
+                                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+                            </a>
+                            {% endif %}
+                            {% if current_user.is_farmer() %}
+                                <a href="{{ url_for('products.farmer_products') }}" class="hover:text-green-200 transition-colors">
+                                    <i class="fas fa-tractor mr-1"></i>My Products
+                                </a>
+                            {% endif %}
+                            <div class="relative" id="profile-dropdown">
+                                <button id="profile-dropdown-btn" type="button" class="flex items-center space-x-1 hover:text-green-200 transition-colors focus:outline-none">
+                                    <i class="fas fa-user mr-1"></i>
+                                    <span>{{ current_user.username }}</span>
+                                    <i class="fas fa-chevron-down text-sm"></i>
+                                </button>
+                                <div id="profile-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                                    <a href="{{ url_for('auth.profile') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                        <i class="fas fa-user-circle mr-2"></i>Profile
+                                    </a>
+                                    <a href="{{ url_for('orders.my_orders') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                        <i class="fas fa-list mr-2"></i>My Orders
+                                    </a>
+                                    <hr class="my-1">
+                                    <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="hover:text-green-200 transition-colors">
+                            <i class="fas fa-sign-in-alt mr-1"></i>Login
+                        </a>
+                        <a href="{{ url_for('auth.signup') }}" class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-md transition-colors">
+                            <i class="fas fa-user-plus mr-1"></i>Sign Up
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="flash-message mb-4 p-4 rounded-md {% if category == 'error' %}bg-red-100 border border-red-400 text-red-700{% elif category == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif category == 'warning' %}bg-yellow-100 border border-yellow-400 text-yellow-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %}">
+                        <div class="flex items-center">
+                            {% if category == 'error' %}
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                            {% elif category == 'success' %}
+                                <i class="fas fa-check-circle mr-2"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle mr-2"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Farmer's Market Hub</h3>
+                    <p class="text-gray-300">Connecting local farmers with consumers for fresh, quality produce.</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{{ url_for('main.products') }}" class="text-gray-300 hover:text-white">Browse Products</a></li>
+                        <li><a href="{{ url_for('main.become_farmer') }}" class="text-gray-300 hover:text-white">Become a Farmer</a></li>
+                        <li><a href="{{ url_for('main.about') }}" class="text-gray-300 hover:text-white">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <p class="text-gray-300">Email: info@farmersmarkethub.com</p>
+                    <p class="text-gray-300">Phone: (555) 123-4567</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+                <p>&copy; 2024 Farmer's Market Hub. All rights reserved.</p>
+                <p class="mt-2">Made with <span class="text-red-500">&hearts;</span> by Tanish Poddar</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Update cart count
+        function updateCartCount() {
+            fetch('/api/cart-count')
+                .then(response => response.json())
+                .then(data => {
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = data.count;
+                        cartCount.style.display = data.count > 0 ? 'flex' : 'none';
+                    }
+                });
+        }
+
+        // Update cart count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+            // Profile dropdown logic
+            const btn = document.getElementById('profile-dropdown-btn');
+            const menu = document.getElementById('profile-dropdown-menu');
+            if (btn && menu) {
+                document.addEventListener('click', function(e) {
+                    if (btn.contains(e.target)) {
+                        menu.classList.toggle('hidden');
+                    } else if (!menu.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+
+        // Auto-hide flash messages
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.opacity = '0';
+                setTimeout(function() {
+                    message.remove();
+                }, 300);
+            });
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
