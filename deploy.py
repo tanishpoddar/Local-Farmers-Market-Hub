@@ -5,7 +5,7 @@ This script initializes the database and creates test users for demonstration.
 """
 
 from app import create_app, db
-from app.models import User, UserRole
+from app.models import User, UserRole, Product
 import os
 
 def deploy():
@@ -13,7 +13,17 @@ def deploy():
     app = create_app()
     
     with app.app_context():
+        # Ensure database directory exists
+        db_url = app.config['SQLALCHEMY_DATABASE_URI']
+        if db_url.startswith('sqlite:///'):
+            db_path = db_url.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
+                print(f"Ensured database directory exists: {db_dir}")
+        
         # Create database tables
+        print("Creating database tables...")
         db.create_all()
         
         # Create admin user if it doesn't exist
@@ -66,12 +76,31 @@ def deploy():
             db.session.add(test_farmer)
             print("Test farmer created: farmer1@test.com")
         
+        # Add a sample product if farmer exists and no products exist
+        if test_farmer and Product.query.count() == 0:
+            sample_product = Product(
+                name='Fresh Tomatoes',
+                description='Juicy red tomatoes, perfect for salads and cooking',
+                price=4.99,
+                quantity=50,
+                unit='lb',
+                organic=True,
+                category='Vegetables',
+                farmer_id=test_farmer.id,
+                pickup_available=True,
+                delivery_available=True,
+                delivery_fee=2.50
+            )
+            db.session.add(sample_product)
+            print("Sample product created")
+        
         db.session.commit()
         
         print("\n🔑 Test Credentials Available:")
         print("👤 Admin: admin@test.com / admin123")
         print("🛒 Buyer: buyer@test.com / buyer123")
         print("🌾 Farmer: farmer1@test.com / farmer123")
+        print("\n✅ Deployment completed successfully!")
 
 if __name__ == '__main__':
     deploy()

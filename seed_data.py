@@ -8,12 +8,22 @@ from app import create_app, db
 from app.models import User, UserRole, Product, Order, OrderItem, OrderStatus, DeliveryType
 from datetime import datetime, timedelta
 import random
+import os
 
 def seed_database():
     """Seed the database with test data"""
     app = create_app()
     
     with app.app_context():
+        # Ensure database directory exists
+        db_url = app.config['SQLALCHEMY_DATABASE_URI']
+        if db_url.startswith('sqlite:///'):
+            db_path = db_url.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
+                print(f"Ensured database directory exists: {db_dir}")
+        
         # Clear existing data (optional - comment out if you want to keep existing data)
         print("Clearing existing data...")
         db.drop_all()

@@ -19,15 +19,18 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     
-    # Database configuration - Use SQLite with absolute path for Render
+    # Database configuration - Use SQLite with proper path for Render
     database_url = os.environ.get('DATABASE_URL')
     if database_url and database_url.startswith('postgres://'):
         # Fix for Render's postgres URL format
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     
-    # Use SQLite by default with absolute path
+    # Use SQLite by default with proper path creation
     if not database_url:
-        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'instance', 'farmers_market.db')
+        # Ensure instance directory exists
+        instance_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'instance')
+        os.makedirs(instance_dir, exist_ok=True)
+        db_path = os.path.join(instance_dir, 'farmers_market.db')
         database_url = f'sqlite:///{db_path}'
     
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
