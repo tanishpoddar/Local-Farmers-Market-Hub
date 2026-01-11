@@ -18,20 +18,36 @@ def create_app():
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///farmers_market.db'
+    
+    # Database configuration - Use SQLite with absolute path for Render
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith('postgres://'):
+        # Fix for Render's postgres URL format
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    # Use SQLite by default with absolute path
+    if not database_url:
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'instance', 'farmers_market.db')
+        database_url = f'sqlite:///{db_path}'
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Email configuration
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'tanish.iaf1852005@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'eyqn cprl cyya ghod'
-    app.config['MAIL_DEFAULT_SENDER'] = ("Farmer's Market Hub", 'tanish.iaf1852005@gmail.com')
+    # Email configuration - Use environment variables for production
+    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+    app.config['MAIL_DEFAULT_SENDER'] = (
+        os.environ.get('MAIL_DEFAULT_SENDER_NAME', "Farmer's Market Hub"),
+        os.environ.get('MAIL_USERNAME', 'noreply@farmersmarket.com')
+    )
     
-    # Upload folder for images
-    app.config['UPLOAD_FOLDER'] = 'app/static/uploads'
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Upload folder for images - Use absolute path for Render
+    upload_folder = os.environ.get('UPLOAD_FOLDER') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+    app.config['UPLOAD_FOLDER'] = upload_folder
+    os.makedirs(upload_folder, exist_ok=True)
     
     # Initialize extensions with app
     db.init_app(app)

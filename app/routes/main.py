@@ -163,6 +163,14 @@ def api_products():
 def about():
     return render_template('about.html')
 
+@main_bp.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Farmers Market Hub is running'
+    }), 200
+
 @main_bp.route('/become-farmer', methods=['GET', 'POST'])
 def become_farmer():
     if request.method == 'POST':

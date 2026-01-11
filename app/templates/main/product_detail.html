@@ -51,7 +51,7 @@
                 </div>
 
                 <!-- Add to Cart Form -->
-                {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated and not current_user.is_admin() %}
                 <form id="add-to-cart-form" action="{{ url_for('orders.add_to_cart', product_id=product.id) }}" method="post" class="mt-4 flex items-center gap-2">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="flex items-center border border-gray-300 rounded-md">
@@ -63,6 +63,13 @@
                         Add to Cart
                     </button>
                 </form>
+                {% elif current_user.is_authenticated and current_user.is_admin() %}
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <p class="text-blue-800 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        You are logged in as an admin. Admins cannot purchase products.
+                    </p>
+                </div>
                 {% else %}
                 <div class="mt-4">
                     <a href="{{ url_for('auth.login') }}" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium">

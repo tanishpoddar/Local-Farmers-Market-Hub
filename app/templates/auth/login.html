@@ -6,6 +6,31 @@
         <div>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
         </div>
+        
+        <!-- Test Credentials Section -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 class="text-sm font-semibold text-blue-800 mb-2">🧪 Test Credentials</h3>
+            <div class="text-xs text-blue-700 space-y-1">
+                <div class="flex justify-between">
+                    <span class="font-medium">👤 Admin:</span>
+                    <span>admin@test.com / admin123</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">🛒 Buyer:</span>
+                    <span>buyer@test.com / buyer123</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="font-medium">🌾 Farmer:</span>
+                    <span>farmer1@test.com / farmer123</span>
+                </div>
+            </div>
+            <div class="mt-2 flex flex-wrap gap-1">
+                <button onclick="fillCredentials('admin@test.com', 'admin123')" class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded">Admin</button>
+                <button onclick="fillCredentials('buyer@test.com', 'buyer123')" class="px-2 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-800 rounded">Buyer</button>
+                <button onclick="fillCredentials('farmer1@test.com', 'farmer123')" class="px-2 py-1 text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded">Farmer</button>
+            </div>
+        </div>
+
         <form method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="rounded-md shadow-sm -space-y-px">
@@ -33,4 +58,11 @@
         </form>
     </div>
 </div>
+
+<script>
+function fillCredentials(email, password) {
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = password;
+}
+</script>
 {% endblock %} 

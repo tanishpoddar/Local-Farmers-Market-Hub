@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: farmers-market-app
+    env: python
+    buildCommand: pip install -r requirements.txt && python seed_data.py
+    startCommand: gunicorn run:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: true
+    disk:
+      name: farmers-market-disk
+      mountPath: /opt/render/project/src/instance
+      sizeGB: 1

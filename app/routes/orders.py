@@ -21,6 +21,11 @@ def clear_cart():
 
 @orders_bp.route('/cart')
 def cart():
+    # Redirect admins away from cart
+    if current_user.is_authenticated and current_user.is_admin():
+        flash('Admins cannot access cart functionality.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+    
     cart_data = get_cart()
     cart_items = []
     total = 0
@@ -42,6 +47,10 @@ def cart():
 def add_to_cart(product_id):
     if not current_user.is_authenticated:
         return jsonify({'success': False, 'message': 'Please log in to add items to cart'})
+    
+    # Prevent admins from using cart functionality
+    if current_user.is_admin():
+        return jsonify({'success': False, 'message': 'Admins cannot add items to cart'})
     
     product = Product.query.get_or_404(product_id)
     
@@ -75,7 +84,11 @@ def add_to_cart(product_id):
 @orders_bp.route('/cart/update/<int:product_id>', methods=['POST'])
 def update_cart(product_id):
     if not current_user.is_authenticated:
-        return jsonify({'success': False, 'message': 'Please log in'})
+        return jsonify({'success': False, 'message': 'Please log in'}), 401
+    
+    # Prevent admins from using cart functionality
+    if current_user.is_admin():
+        return jsonify({'success': False, 'message': 'Admins cannot use cart functionality'}), 403
     
     product = Product.query.get_or_404(product_id)
     quantity = int(request.form.get('quantity', 0))
@@ -99,7 +112,11 @@ def update_cart(product_id):
 @orders_bp.route('/cart/remove/<int:product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     if not current_user.is_authenticated:
-        return jsonify({'success': False, 'message': 'Please log in'})
+        return jsonify({'success': False, 'message': 'Please log in'}), 401
+    
+    # Prevent admins from using cart functionality
+    if current_user.is_admin():
+        return jsonify({'success': False, 'message': 'Admins cannot use cart functionality'}), 403
     
     cart = get_cart()
     cart.pop(str(product_id), None)
@@ -113,6 +130,11 @@ def remove_from_cart(product_id):
 @orders_bp.route('/checkout', methods=['GET', 'POST'])
 @login_required
 def checkout():
+    # Prevent admins from accessing checkout
+    if current_user.is_admin():
+        flash('Admins cannot access checkout functionality.', 'warning')
+        return redirect(url_for('admin.dashboard'))
+    
     cart_data = get_cart()
     # Always calculate cart_items and total at the start
     cart_items = []
@@ -270,7 +292,7 @@ def update_order_status(order_id):
 
 @orders_bp.route('/api/cart-count')
 def cart_count():
-    if not current_user.is_authenticated:
+    if not current_user.is_authenticated or current_user.is_admin():
         return jsonify({'count': 0})
     
     cart = get_cart()

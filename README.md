@@ -66,6 +66,22 @@ A modern web application connecting local farmers with buyers and empowering adm
    ```
    Visit [http://localhost:5000](http://localhost:5000)
 
+6. **(Optional) Seed test data:**
+   ```bash
+   python seed_data.py
+   ```
+   This creates test users, products, and orders for easy testing.
+
+## Test Credentials
+
+After running the seed script, you can use these test accounts:
+
+- **Admin**: admin@test.com / admin123
+- **Buyer**: buyer@test.com / buyer123  
+- **Farmers**: farmer1@test.com / farmer123 (also farmer2, farmer3)
+
+The login page includes quick-fill buttons for easy testing.
+
 ## Usage
 
 - **Sign up** as a buyer or use the Become a Farmer form to apply as a farmer.

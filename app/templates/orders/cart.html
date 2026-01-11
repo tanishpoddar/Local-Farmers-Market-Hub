@@ -55,25 +55,55 @@ Array.from(document.getElementsByClassName('cart-qty-input')).forEach(function(i
     input.addEventListener('change', function() {
         const productId = this.dataset.productId;
         const quantity = this.value;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
         fetch(`/cart/update/${productId}`, {
             method: 'POST',
             body: new URLSearchParams({quantity}),
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
         })
         .then(response => response.json())
-        .then(data => { if (data.success) location.reload(); });
+        .then(data => { 
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error updating cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating cart');
+        });
     });
 });
 // Remove item
 Array.from(document.getElementsByClassName('cart-remove-btn')).forEach(function(btn) {
     btn.addEventListener('click', function() {
         const productId = this.dataset.productId;
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
         fetch(`/cart/remove/${productId}`, {
             method: 'POST',
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
         })
         .then(response => response.json())
-        .then(data => { if (data.success) location.reload(); });
+        .then(data => { 
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Error removing item from cart');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing item from cart');
+        });
     });
 });
 </script>
